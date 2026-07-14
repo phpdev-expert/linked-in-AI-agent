@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your Profile Report</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 760px; margin: 3rem auto; padding: 0 1rem; }
+    .overall { font-size: 3rem; font-weight: 700; color: #0a66c2; }
+    .card { border: 1px solid #e0e0e0; border-radius: 12px; padding: 1.25rem; margin: 1rem 0; }
+    .card h3 { margin: 0 0 .25rem; }
+    .score { font-weight: 700; color: #0a66c2; }
+    pre { white-space: pre-wrap; background: #f6f8fa; padding: 1rem; border-radius: 8px; }
+    button { padding: .4rem .8rem; border: 0; border-radius: 6px; background: #0a66c2; color: #fff; cursor: pointer; }
+    .keywords span { display: inline-block; background: #eef3f8; color: #0a66c2; padding: .25rem .6rem; margin: .2rem; border-radius: 999px; font-size: .9rem; }
+    a { color: #0a66c2; }
+  </style>
+</head>
+<body>
+  <p><a href="/">&larr; Analyze another profile</a></p>
+  <h1>Your Profile Score</h1>
+  <p class="overall">{{ report.overall_score }}/100</p>
+
+  {% for s in report.sections %}
+  <div class="card">
+    <h3>{{ s.name }} &mdash; <span class="score">{{ s.score }}/100</span></h3>
+    <p>{{ s.critique }}</p>
+    <strong>Suggested rewrite</strong>
+    <pre id="rw-{{ loop.index }}">{{ s.rewrite }}</pre>
+    <button onclick="copyText('rw-{{ loop.index }}')">Copy rewrite</button>
+  </div>
+  {% endfor %}
+
+  <div class="card">
+    <h3>Suggested keywords</h3>
+    <p class="keywords">
+      {% for k in report.keywords %}<span>{{ k }}</span>{% endfor %}
+    </p>
+  </div>
+
+  <script>
+    function copyText(id) {
+      const el = document.getElementById(id);
+      navigator.clipboard.writeText(el.innerText);
+    }
+  </script>
+</body>
+</html>
