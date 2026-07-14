@@ -44,3 +44,10 @@ def test_analyze_extracts_json_from_fenced_block(sample_sections, valid_report_j
     client = FakeClient([fenced])
     report = analyze(sample_sections, client=client, model="test-model")
     assert report.overall_score == 78
+
+
+def test_analyze_extracts_json_when_prose_contains_inline_fence(sample_sections, valid_report_json):
+    fenced = f"Try using ```python``` in skills.\n\n```json\n{valid_report_json}\n```"
+    client = FakeClient([fenced])
+    report = analyze(sample_sections, client=client, model="test-model")
+    assert report.overall_score == 78

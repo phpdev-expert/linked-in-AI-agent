@@ -4,13 +4,15 @@ The Anthropic client is injected so tests can pass a fake. No client is
 constructed here.
 """
 
-import json
+import re
 
 from pydantic import ValidationError
 
 from app.models import ProfileSections, Report
 
 MAX_TOKENS = 4096
+
+_FENCE_RE = re.compile(r"```(?:json)?\s*(\{.*\})\s*```", re.DOTALL)
 
 _RUBRIC = """You are a LinkedIn profile coach. Score each section 0-100 against
 these best practices:
@@ -52,12 +54,14 @@ def _build_prompt(sections: ProfileSections) -> str:
 
 
 def _extract_json(text: str) -> str:
-    """Pull a JSON object out of the response, tolerating ```json fences."""
-    if "```" in text:
-        fenced = text.split("```", 2)[1]
-        if fenced.startswith("json"):
-            fenced = fenced[len("json"):]
-        text = fenced
+    """Pull a JSON object out of the response.
+
+    Prefers a ```json fenced block; otherwise falls back to the outermost
+    braces. Tolerates prose and unrelated code fences around the JSON.
+    """
+    match = _FENCE_RE.search(text)
+    if match:
+        return match.group(1)
     start = text.find("{")
     end = text.rfind("}")
     if start == -1 or end == -1:
@@ -86,6 +90,6 @@ def analyze(sections: ProfileSections, client, model: str) -> Report:
         raw = _call(client, model, prompt)
         try:
             return Report.model_validate_json(_extract_json(raw))
-        except (ValueError, ValidationError, json.JSONDecodeError) as exc:
+        except (ValueError, ValidationError) as exc:
             last_error = exc
     raise ValueError(f"Claude did not return a valid report: {last_error}")
